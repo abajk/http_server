@@ -20,6 +20,8 @@
 "http_server\stm32f4xx_hal_spi.o"
 "http_server\stm32f4xx_hal_tim_ex.o"
 "http_server\stm32f4xx_hal.o"
+"http_server\stm32f4xx_hal_rtc_ex.o"
+"http_server\stm32f4xx_hal_rtc.o"
 "http_server\socket.o"
 "http_server\wizchip_conf.o"
 "http_server\w5100.o"

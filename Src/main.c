@@ -48,6 +48,8 @@
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
+RTC_HandleTypeDef hrtc;
+
 SPI_HandleTypeDef hspi2;
 
 UART_HandleTypeDef huart6;
@@ -64,7 +66,6 @@ UART_HandleTypeDef huart6;
 #define NETMASK_MSG	         	"  NETMASK:     %d.%d.%d.%d\r\n"
 #define GW_MSG 		 		 				"  GATEWAY:     %d.%d.%d.%d\r\n"
 #define MAC_MSG		 		 				"  MAC ADDRESS: %x:%x:%x:%x:%x:%x\r\n"
-#define HTTP_MSG 							"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nRefresh: 5\r\n\r\n<!DOCTYPE HTML>\r\n<HTML>\r\n<HEAD>\r\n<TITLE>Example</TITLE>\r\n</HEAD>\r\n<BODY>\r\nHello World!\r\n</BODY>\r\n</HTML>"
 #define CONN_ESTABLISHED_MSG 	"Connection established with remote IP: %d.%d.%d.%d:%d\r\n"
 #define SENT_MESSAGE_MSG	 		"Sent a message. Let's close the socket!\r\n"
 #define WRONG_RETVAL_MSG	 		"Something went wrong; return value: %d\r\n"
@@ -73,6 +74,16 @@ UART_HandleTypeDef huart6;
 
 char msg[60];
 
+char http_data[800];
+
+uint8_t hour=0;
+uint8_t minute=0;
+uint8_t second=0;
+
+uint16_t year=0;
+uint8_t month=0;
+uint8_t day=0;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -80,6 +91,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_SPI2_Init(void);
+static void MX_RTC_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -122,8 +134,12 @@ int main(void)
   MX_GPIO_Init();
   MX_USART6_UART_Init();
   MX_SPI2_Init();
+  MX_RTC_Init();
 
   /* USER CODE BEGIN 2 */
+	
+	RTC_TimeTypeDef RTC_Time;
+	RTC_DateTypeDef RTC_Date;
 
   uint8_t retVal, sockStatus;
 	uint8_t bufSize[] = {2, 2, 2, 2};
@@ -188,8 +204,19 @@ int main(void)
 				  HAL_UART_Transmit(&huart6, (uint8_t*)msg, strlen(msg), 100);
 #endif
 				  /* Let's send a welcome message and closing socket */
-					retVal = send(0, (uint8_t *)HTTP_MSG, strlen(HTTP_MSG));
-				  if((int16_t)retVal == (int16_t)strlen(HTTP_MSG))
+					HAL_RTC_GetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
+					HAL_RTC_GetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
+					hour=RTC_Time.Hours;
+					minute=RTC_Time.Minutes;
+					second=RTC_Time.Seconds;
+		
+					year=RTC_Date.Year+2000;
+					month=RTC_Date.Month;
+					day=RTC_Date.Date;
+					
+					sprintf(http_data,"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nRefresh: 1\r\n\r\n<!DOCTYPE HTML>\r\n<HTML>\r\n<HEAD>\r\n<TITLE>Clock</TITLE>\r\n</HEAD>\r\n<BODY>\r\nDate:%02d-%02d-%04d\n\rTime: %02d:%02d:%02d\r\n</BODY>\r\n</HTML>",day,month,year,hour,minute,second);
+					retVal = send(0, (uint8_t *)http_data,strlen(http_data));
+				  if((int16_t)retVal == (int16_t)strlen(http_data))
 					{
 #ifdef debug
 						HAL_UART_Transmit(&huart6, (uint8_t*)SENT_MESSAGE_MSG, strlen(SENT_MESSAGE_MSG), 100);
@@ -241,6 +268,7 @@ void SystemClock_Config(void)
 
   RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
 
     /**Configure the main internal regulator output voltage 
     */
@@ -250,9 +278,10 @@ void SystemClock_Config(void)
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSICalibrationValue = 16;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLM = 8;
@@ -278,6 +307,13 @@ void SystemClock_Config(void)
     _Error_Handler(__FILE__, __LINE__);
   }
 
+  PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+  PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
     /**Configure the Systick interrupt time 
     */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
@@ -288,6 +324,55 @@ void SystemClock_Config(void)
 
   /* SysTick_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
+}
+
+/* RTC init function */
+static void MX_RTC_Init(void)
+{
+
+  RTC_TimeTypeDef sTime;
+  RTC_DateTypeDef sDate;
+
+    /**Initialize RTC Only 
+    */
+  hrtc.Instance = RTC;
+  hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
+  hrtc.Init.AsynchPrediv = 127;
+  hrtc.Init.SynchPrediv = 255;
+  hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
+  hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+  hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+  if (HAL_RTC_Init(&hrtc) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Initialize RTC and set the Time and Date 
+    */
+  if(HAL_RTCEx_BKUPRead(&hrtc, RTC_BKP_DR0) != 0x32F2){
+  sTime.Hours = 0;
+  sTime.Minutes = 0;
+  sTime.Seconds = 0;
+  sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+  sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+  if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sDate.WeekDay = RTC_WEEKDAY_SUNDAY;
+  sDate.Month = RTC_MONTH_JANUARY;
+  sDate.Date = 1;
+  sDate.Year = 17;
+
+  if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BIN) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    HAL_RTCEx_BKUPWrite(&hrtc,RTC_BKP_DR0,0x32F2);
+  }
+
 }
 
 /* SPI2 init function */

@@ -55,7 +55,7 @@ UART_HandleTypeDef huart6;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-//#define debug
+#define debug
 
 #define SEPARATOR            	"=============================================\r\n"
 #define WELCOME_MSG  		 			"Welcome to W5100 configuration\r\n"
@@ -64,20 +64,7 @@ UART_HandleTypeDef huart6;
 #define NETMASK_MSG	         	"  NETMASK:     %d.%d.%d.%d\r\n"
 #define GW_MSG 		 		 				"  GATEWAY:     %d.%d.%d.%d\r\n"
 #define MAC_MSG		 		 				"  MAC ADDRESS: %x:%x:%x:%x:%x:%x\r\n"
-#define HTTP_MSG 							"HTTP/1.1 200 OK\r\n								\
-															Content-Type: text/html\r\n					\
-															Connection: close\r\n								\
-															Refresh: 5\r\n											\
-															\r\n																\
-															<!DOCTYPE HTML>\r\n									\
-															<HTML>\r\n													\
-															<HEAD>\r\n													\
-															<TITLE>Example</TITLE>\r\n					\
-															</HEAD>\r\n													\
-															<BODY>\r\n													\
-															Hello World!\r\n										\
-															</BODY>\r\n													\
-															</HTML>"
+#define HTTP_MSG 							"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nRefresh: 5\r\n\r\n<!DOCTYPE HTML>\r\n<HTML>\r\n<HEAD>\r\n<TITLE>Example</TITLE>\r\n</HEAD>\r\n<BODY>\r\nHello World!\r\n</BODY>\r\n</HTML>"
 #define CONN_ESTABLISHED_MSG 	"Connection established with remote IP: %d.%d.%d.%d:%d\r\n"
 #define SENT_MESSAGE_MSG	 		"Sent a message. Let's close the socket!\r\n"
 #define WRONG_RETVAL_MSG	 		"Something went wrong; return value: %d\r\n"
@@ -202,7 +189,7 @@ int main(void)
 #endif
 				  /* Let's send a welcome message and closing socket */
 					retVal = send(0, (uint8_t *)HTTP_MSG, strlen(HTTP_MSG));
-				  if(retVal == (int16_t)strlen(HTTP_MSG))
+				  if((int16_t)retVal == (int16_t)strlen(HTTP_MSG))
 					{
 #ifdef debug
 						HAL_UART_Transmit(&huart6, (uint8_t*)SENT_MESSAGE_MSG, strlen(SENT_MESSAGE_MSG), 100);

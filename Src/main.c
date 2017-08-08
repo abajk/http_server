@@ -43,6 +43,7 @@
 
 #include "../ioLibrary_Driver-master/Ethernet/wizchip_conf.h"
 #include "../ioLibrary_Driver-master/Ethernet/socket.h"
+#include "../ioLibrary_Driver-master/Internet/SNTP/sntp.h"
 #include <string.h>
 
 /* USER CODE END Includes */

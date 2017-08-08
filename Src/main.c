@@ -76,6 +76,8 @@ UART_HandleTypeDef huart6;
 char msg[60];
 
 char http_data[800];
+char http_request[2048];
+uint16_t http_request_len=0;
 
 uint8_t hour=0;
 uint8_t minute=0;
@@ -155,7 +157,7 @@ int main(void)
   reg_wizchip_spi_cbfunc(spi_rb, spi_wb);
 
   wizchip_init(bufSize, bufSize);
-  wiz_NetInfo netInfo = { .mac 	= {0x00, 0x08, 0xdc, 0xab, 0xcd, 0xef},	// Mac address
+  wiz_NetInfo netInfo = { .mac 	= {0x02, 0x08, 0xdc, 0xab, 0xcd, 0xef},	// Mac address
                           .ip 	= {192, 168, 2, 5},					// IP address
                           .sn 	= {255, 255, 255, 0},					// Subnet mask
                           .gw 	= {192, 168, 2, 2}};					// Gateway address
@@ -195,15 +197,19 @@ int main(void)
 			  /* If connection is ESTABLISHED with remote peer */
 				sockStatus = getSn_SR(0);
 			  if(sockStatus == SOCK_ESTABLISHED) {
+#ifdef debug
 				  uint8_t remoteIP[4];
 				  uint16_t remotePort;
 				  /* Retrieving remote peer IP and port number */
 				  getsockopt(0, SO_DESTIP, remoteIP);
 				  getsockopt(0, SO_DESTPORT, (uint8_t*)&remotePort);
-#ifdef debug
 				  sprintf(msg, CONN_ESTABLISHED_MSG, remoteIP[0], remoteIP[1], remoteIP[2], remoteIP[3], remotePort);
 				  HAL_UART_Transmit(&huart6, (uint8_t*)msg, strlen(msg), 100);
+					
+					http_request_len = recv(0,(uint8_t *)http_request,2048);
+					HAL_UART_Transmit(&huart6, (uint8_t*)http_request, http_request_len, 100);
 #endif
+					
 				  /* Let's send a welcome message and closing socket */
 					HAL_RTC_GetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
 					HAL_RTC_GetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);

@@ -209,19 +209,24 @@ int main(void)
 					http_request_len = recv(0,(uint8_t *)http_request,2048);
 					HAL_UART_Transmit(&huart6, (uint8_t*)http_request, http_request_len, 100);
 #endif
-					
-				  /* Let's send a welcome message and closing socket */
-					HAL_RTC_GetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
-					HAL_RTC_GetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
-					hour=RTC_Time.Hours;
-					minute=RTC_Time.Minutes;
-					second=RTC_Time.Seconds;
+					if(strstr(http_request,"GET / HTTP/1.1\r\n") != NULL){
+						/* Let's send a welcome message and closing socket */
+						HAL_RTC_GetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
+						HAL_RTC_GetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
+						hour=RTC_Time.Hours;
+						minute=RTC_Time.Minutes;
+						second=RTC_Time.Seconds;
 		
-					year=RTC_Date.Year+2000;
-					month=RTC_Date.Month;
-					day=RTC_Date.Date;
+						year=RTC_Date.Year+2000;
+						month=RTC_Date.Month;
+						day=RTC_Date.Date;
 					
-					sprintf(http_data,"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nRefresh: 1\r\n\r\n<!DOCTYPE HTML>\r\n<HTML>\r\n<HEAD>\r\n<TITLE>Clock</TITLE>\r\n</HEAD>\r\n<BODY>\r\nDate:%02d-%02d-%04d\n\rTime: %02d:%02d:%02d\r\n</BODY>\r\n</HTML>",day,month,year,hour,minute,second);
+						sprintf(http_data,"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nRefresh: 1\r\n\r\n<!DOCTYPE HTML>\r\n<HTML>\r\n<HEAD>\r\n<TITLE>Clock</TITLE>\r\n</HEAD>\r\n<BODY>\r\nDate:%02d-%02d-%04d\n\rTime: %02d:%02d:%02d\r\n</BODY>\r\n</HTML>",day,month,year,hour,minute,second);
+					}
+					else{
+						sprintf(http_data,"HTTP/1.1 404 Not Found\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 9\r\nConnection: close\r\n\r\nNot found\r\n");				
+					}
+					
 					retVal = send(0, (uint8_t *)http_data,strlen(http_data));
 				  if((int16_t)retVal == (int16_t)strlen(http_data))
 					{

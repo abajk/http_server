@@ -73,6 +73,7 @@ UART_HandleTypeDef huart6;
 #define WRONG_STATUS_MSG	 		"Something went wrong; STATUS: %d\r\n"
 #define LISTEN_ERR_MSG		 		"LISTEN Error!\r\n"
 
+
 char msg[60];
 
 char http_data[800];
@@ -86,6 +87,8 @@ uint8_t second=0;
 uint16_t year=0;
 uint8_t month=0;
 uint8_t day=0;
+
+uint8_t ntp_buf[1024];
 
 /* USER CODE END PV */
 
@@ -160,9 +163,14 @@ int main(void)
   wiz_NetInfo netInfo = { .mac 	= {0x02, 0x08, 0xdc, 0xab, 0xcd, 0xef},	// Mac address
                           .ip 	= {192, 168, 2, 5},					// IP address
                           .sn 	= {255, 255, 255, 0},					// Subnet mask
-                          .gw 	= {192, 168, 2, 2}};					// Gateway address
+                          .gw 	= {192, 168, 2, 2},
+													.dns = {8, 8, 8, 8},
+													.dhcp = NETINFO_STATIC};					// Gateway address
   wizchip_setnetinfo(&netInfo);
 													
+	uint8_t NTP_addr[4] = {194,146,251,100};
+	datetime time;
+	
 #ifdef debug
   wizchip_getnetinfo(&netInfo);
   HAL_UART_Transmit(&huart6, (uint8_t*)NETWORK_MSG, strlen(NETWORK_MSG), 100);											
@@ -176,6 +184,8 @@ int main(void)
   HAL_UART_Transmit(&huart6, (uint8_t*)msg, strlen(msg), 100);															
 #endif
 
+	SNTP_init(1,NTP_addr,24,ntp_buf);	
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -213,7 +223,6 @@ int main(void)
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
 															"Content-Type: text/html\r\n"
 															"Connection: close\r\n"
-															"Refresh: 1\r\n"
 															"\r\n"
 															"<!DOCTYPE HTML>\r\n"
 															"<HTML>\r\n"
@@ -221,13 +230,16 @@ int main(void)
 															"<TITLE>Clock</TITLE>\r\n"
 															"</HEAD>\r\n"
 															"<BODY>\r\n"
-															"<a href=""zegar"">Zegar</a>\r\n"
-															"<br>\r\n"
 															"<a href=""wyjscia"">Wyjscia</a>\r\n"
+															"<br>\r\n"
+															"<a href=""sensors"">Czujniki</a>\r\n"
+															"<br>\r\n"
+															"<a href=""config"">Konfiguracja</a>\r\n"
+															"<br>\r\n"
 															"</BODY>\r\n"
 															"</HTML>");
 					}
-					else if(strstr(http_request,"GET /zegar HTTP/1.1\r\n") != NULL){
+					else if(strstr(http_request,"GET /config HTTP/1.1\r\n") != NULL){
 						/* Let's send a welcome message and closing socket */
 						HAL_RTC_GetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
 						HAL_RTC_GetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
@@ -247,18 +259,40 @@ int main(void)
 															"<!DOCTYPE HTML>\r\n"
 															"<HTML>\r\n"
 															"<HEAD>\r\n"
-															"<TITLE>Clock</TITLE>\r\n"
+															"<TITLE>Konfiguracja</TITLE>\r\n"
 															"</HEAD>\r\n"
 															"<BODY>\r\n"
-															"Date: %02d-%02d-%04d\r\n"
+															"<h3>Konfiguracja sieciowa</h1>\r\n"
+															"Adres IP: %d.%d.%d.%d\r\n"
 															"<br>\r\n"
-															"Time: %02d:%02d:%02d\r\n"
+															"Maska podsieci: %d.%d.%d.%d\r\n"
+															"<br>\r\n"
+															"Port: 80\r\n"
+															"<h3>Czas</h1>"
+															"Data: %02d-%02d-%04d\r\n"
+															"<br>\r\n"
+															"Czas: %02d:%02d:%02d\r\n"
 															"<br>\r\n"
 															"<a href=""sync_time"">Synchronizuj czas z NTP</a>\r\n"
 															"</BODY>\r\n"
-															"</HTML>",day,month,year,hour,minute,second);
+															"</HTML>",
+															netInfo.ip[0],netInfo.ip[1],netInfo.ip[2],netInfo.ip[3],
+															netInfo.sn[0], netInfo.sn[1], netInfo.sn[2], netInfo.sn[3],
+															day,month,year,
+															hour,minute,second);
 					}
 					else if(strstr(http_request,"sync_time") != NULL){
+						while (SNTP_run(&time) != 1);
+						RTC_Time.Hours=time.hh;
+						RTC_Time.Minutes=time.mm;
+						RTC_Time.Seconds=time.ss;
+						HAL_RTC_SetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
+
+		
+						RTC_Date.Year=time.yy-2000;
+						RTC_Date.Month=time.mm;
+						RTC_Date.Date=time.dd;
+						HAL_RTC_SetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
 															"Content-Type: text/html\r\n"
 															"Connection: close\r\n"
@@ -269,8 +303,16 @@ int main(void)
 															"<TITLE>Synchronizacja czasu</TITLE>\r\n"
 															"</HEAD>\r\n"
 															"<BODY>\r\n"
-															"Synchronizacja czasu z serwerem NTP</BODY>\r\n"
-															"</HTML>");
+															"Synchronizacja czasu z serwerem NTP przebiegla pomyslnie</BODY>\r\n"
+															"<br>\r\n"
+															"Data: %02d-%02d-%04d\r\n"
+															"<br>\r\n"
+															"Czas: %02d:%02d:%02d\r\n"
+															"<br>\r\n"
+															"<a href=""config"">Powrót</a>\r\n"
+															"</HTML>",
+															time.dd,time.mm,time.yy,
+															time.hh,time.mm,time.ss);
 					}
 					else if(strstr(http_request,"wyjscia") != NULL){
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
@@ -285,6 +327,19 @@ int main(void)
 															"<BODY>\r\n"
 															"<br>\r\n"
 															"<a href=""OUT1=1"">Wlacz wyjscie 1</a>\r\n"
+															"</HTML>");
+					}
+					else if(strstr(http_request,"sensors") != NULL){
+						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
+															"Content-Type: text/html\r\n"
+															"Connection: close\r\n"
+															"\r\n"
+															"<!DOCTYPE HTML>\r\n"
+															"<HTML>\r\n"
+															"<HEAD>\r\n"
+															"<TITLE>Czujniki</TITLE>\r\n"
+															"</HEAD>\r\n"
+															"<BODY>\r\n"
 															"</HTML>");
 					}
 					else{
@@ -572,6 +627,10 @@ uint8_t spi_rb(void) {
 
 void spi_wb(uint8_t b) {
 	HAL_SPI_Transmit(&hspi2, &b, 1, 0xFFFFFFFF);
+}
+
+void PRINT_STR(char *msg){
+		HAL_UART_Transmit(&huart6, (uint8_t*)msg, strlen(msg), 100);
 }
 
 /* USER CODE END 4 */

@@ -512,7 +512,7 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>New Group</GroupName>
+          <GroupName>Ethernet</GroupName>
           <Files>
             <File>
               <FileName>socket.c</FileName>
@@ -543,6 +543,16 @@
               <FileName>w5500.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ioLibrary_Driver-master\Ethernet\W5500\w5500.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>NTP</GroupName>
+          <Files>
+            <File>
+              <FileName>sntp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ioLibrary_Driver-master\Internet\SNTP\sntp.c</FilePath>
             </File>
           </Files>
         </Group>

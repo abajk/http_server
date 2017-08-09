@@ -9,7 +9,7 @@
 #include <string.h>
 
 #include "sntp.h"
-#include "socket.h"
+#include "../../Ethernet/socket.h"
 
 ntpformat NTPformat;
 datetime Nowdatetime;

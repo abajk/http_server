@@ -210,6 +210,24 @@ int main(void)
 					HAL_UART_Transmit(&huart6, (uint8_t*)http_request, http_request_len, 100);
 #endif
 					if(strstr(http_request,"GET / HTTP/1.1\r\n") != NULL){
+						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
+															"Content-Type: text/html\r\n"
+															"Connection: close\r\n"
+															"Refresh: 1\r\n"
+															"\r\n"
+															"<!DOCTYPE HTML>\r\n"
+															"<HTML>\r\n"
+															"<HEAD>\r\n"
+															"<TITLE>Clock</TITLE>\r\n"
+															"</HEAD>\r\n"
+															"<BODY>\r\n"
+															"<a href=""zegar"">Zegar</a>\r\n"
+															"<br>\r\n"
+															"<a href=""wyjscia"">Wyjscia</a>\r\n"
+															"</BODY>\r\n"
+															"</HTML>");
+					}
+					else if(strstr(http_request,"GET /zegar HTTP/1.1\r\n") != NULL){
 						/* Let's send a welcome message and closing socket */
 						HAL_RTC_GetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
 						HAL_RTC_GetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
@@ -221,10 +239,61 @@ int main(void)
 						month=RTC_Date.Month;
 						day=RTC_Date.Date;
 					
-						sprintf(http_data,"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nConnection: close\r\nRefresh: 1\r\n\r\n<!DOCTYPE HTML>\r\n<HTML>\r\n<HEAD>\r\n<TITLE>Clock</TITLE>\r\n</HEAD>\r\n<BODY>\r\nDate:%02d-%02d-%04d\n\rTime: %02d:%02d:%02d\r\n</BODY>\r\n</HTML>",day,month,year,hour,minute,second);
+						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
+															"Content-Type: text/html\r\n"
+															"Connection: close\r\n"
+															"Refresh: 1\r\n"
+															"\r\n"
+															"<!DOCTYPE HTML>\r\n"
+															"<HTML>\r\n"
+															"<HEAD>\r\n"
+															"<TITLE>Clock</TITLE>\r\n"
+															"</HEAD>\r\n"
+															"<BODY>\r\n"
+															"Date: %02d-%02d-%04d\r\n"
+															"<br>\r\n"
+															"Time: %02d:%02d:%02d\r\n"
+															"<br>\r\n"
+															"<a href=""sync_time"">Synchronizuj czas z NTP</a>\r\n"
+															"</BODY>\r\n"
+															"</HTML>",day,month,year,hour,minute,second);
+					}
+					else if(strstr(http_request,"sync_time") != NULL){
+						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
+															"Content-Type: text/html\r\n"
+															"Connection: close\r\n"
+															"\r\n"
+															"<!DOCTYPE HTML>\r\n"
+															"<HTML>\r\n"
+															"<HEAD>\r\n"
+															"<TITLE>Synchronizacja czasu</TITLE>\r\n"
+															"</HEAD>\r\n"
+															"<BODY>\r\n"
+															"Synchronizacja czasu z serwerem NTP</BODY>\r\n"
+															"</HTML>");
+					}
+					else if(strstr(http_request,"wyjscia") != NULL){
+						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
+															"Content-Type: text/html\r\n"
+															"Connection: close\r\n"
+															"\r\n"
+															"<!DOCTYPE HTML>\r\n"
+															"<HTML>\r\n"
+															"<HEAD>\r\n"
+															"<TITLE>Wyjscia</TITLE>\r\n"
+															"</HEAD>\r\n"
+															"<BODY>\r\n"
+															"<br>\r\n"
+															"<a href=""OUT1=1"">Wlacz wyjscie 1</a>\r\n"
+															"</HTML>");
 					}
 					else{
-						sprintf(http_data,"HTTP/1.1 404 Not Found\r\nContent-Type: text/plain; charset=utf-8\r\nContent-Length: 9\r\nConnection: close\r\n\r\nNot found\r\n");				
+						sprintf(http_data,"HTTP/1.1 404 Not Found\r\n"
+															"Content-Type: text/plain; charset=utf-8\r\n"
+															"Content-Length: 9\r\n"
+															"Connection: close\r\n"
+															"\r\n"
+															"Not found\r\n");				
 					}
 					
 					retVal = send(0, (uint8_t *)http_data,strlen(http_data));

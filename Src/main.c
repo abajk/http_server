@@ -87,6 +87,8 @@ uint8_t day=0;
 
 uint8_t ntp_buf[512];
 
+uint8_t output[4];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -233,6 +235,8 @@ int main(void)
 															"<BODY>\r\n"
 															"<a href=""wyjscia"">Wyjscia</a>\r\n"
 															"<br>\r\n"
+															"<a href=""inputs"">Wejscia</a>\r\n"
+															"<br>\r\n"
 															"<a href=""sensors"">Czujniki</a>\r\n"
 															"<br>\r\n"
 															"<a href=""config"">Konfiguracja</a>\r\n"
@@ -336,6 +340,19 @@ int main(void)
 															day,month,year,
 															hour,minute,second);
 					}
+					else if(strstr(http_request,"inputs") != NULL){
+						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
+															"Content-Type: text/html\r\n"
+															"Connection: close\r\n"
+															"\r\n"
+															"<!DOCTYPE HTML>\r\n"
+															"<HTML>\r\n"
+															"<HEAD>\r\n"
+															"<TITLE>Wejscia</TITLE>\r\n"
+															"</HEAD>\r\n"
+															"<BODY>\r\n"
+															"</HTML>");
+					}
 					else if(strstr(http_request,"wyjscia") != NULL){
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
 															"Content-Type: text/html\r\n"
@@ -348,14 +365,15 @@ int main(void)
 															"</HEAD>\r\n"
 															"<BODY>\r\n"
 															"<br>\r\n"
-															"Wyjscie1: <a href=""OUT1=1"">Wlacz</a> <a href=""OUT1=0"">Wylacz</a>\r\n"
+															"Wyjscie1: %d <a href=""OUT1=0"">Wlacz</a> <a href=""OUT1=1"">Wylacz</a>\r\n"
 															"<br>\r\n"
-															"Wyjscie2: <a href=""OUT2=1"">Wlacz</a> <a href=""OUT2=0"">Wylacz</a>\r\n"
+															"Wyjscie2: %d <a href=""OUT2=0"">Wlacz</a> <a href=""OUT2=1"">Wylacz</a>\r\n"
 															"<br>\r\n"
-															"Wyjscie3: <a href=""OUT3=1"">Wlacz</a> <a href=""OUT3=0"">Wylacz</a>\r\n"
+															"Wyjscie3: %d <a href=""OUT3=0"">Wlacz</a> <a href=""OUT3=1"">Wylacz</a>\r\n"
 															"<br>\r\n"
-															"Wyjscie4: <a href=""OUT4=1"">Wlacz</a> <a href=""OUT4=0"">Wylacz</a>\r\n"
-															"</HTML>");
+															"Wyjscie4: %d <a href=""OUT4=0"">Wlacz</a> <a href=""OUT4=1"">Wylacz</a>\r\n"
+															"</HTML>",
+															output[0],output[1],output[2],output[3]);
 					}
 					else if(strstr(http_request,"sensors") != NULL){
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
@@ -371,27 +389,35 @@ int main(void)
 															"</HTML>");
 					}
 					else if(strstr(http_request,"OUT1=1") != NULL){
+						output[0]=0;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET);
 					}
 					else if(strstr(http_request,"OUT1=0") != NULL){
+						output[0]=1;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET);
 					}
 					else if(strstr(http_request,"OUT2=1") != NULL){
+						output[1]=0;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_SET);
 					}
 					else if(strstr(http_request,"OUT2=0") != NULL){
+						output[1]=1;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_RESET);
 					}
 					else if(strstr(http_request,"OUT3=1") != NULL){
+						output[2]=0;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);
 					}
 					else if(strstr(http_request,"OUT3=0") != NULL){
+						output[2]=1;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);
 					}
 					else if(strstr(http_request,"OUT4=1") != NULL){
+						output[3]=0;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);
 					}
 					else if(strstr(http_request,"OUT4=0") != NULL){
+						output[3]=1;
 						HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);
 					}
 					else{
@@ -611,8 +637,6 @@ static void MX_USART6_UART_Init(void)
         * Output
         * EVENT_OUT
         * EXTI
-     PA2   ------> USART2_TX
-     PA3   ------> USART2_RX
 */
 static void MX_GPIO_Init(void)
 {
@@ -622,48 +646,36 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, OUT1_Pin|OUT2_Pin|OUT3_Pin|OUT4_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_SET);
-
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PC1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  /*Configure GPIO pins : IN1_Pin IN2_Pin */
+  GPIO_InitStruct.Pin = IN1_Pin|IN2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : USART_TX_Pin USART_RX_Pin */
-  GPIO_InitStruct.Pin = USART_TX_Pin|USART_RX_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART2;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  /*Configure GPIO pins : IN3_Pin IN4_Pin */
+  GPIO_InitStruct.Pin = IN3_Pin|IN4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pin : SPI_CS_Pin */
+  GPIO_InitStruct.Pin = SPI_CS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  HAL_GPIO_Init(SPI_CS_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB1 PB13 PB14 PB15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
+  /*Configure GPIO pins : OUT1_Pin OUT2_Pin OUT3_Pin OUT4_Pin */
+  GPIO_InitStruct.Pin = OUT1_Pin|OUT2_Pin|OUT3_Pin|OUT4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

@@ -807,28 +807,88 @@ void PRINT_STR(char *msg){
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
  if(GPIO_Pin == GPIO_PIN_0){
-		input[0]=HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_0);
+		input[0]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_0);
+		if(input[0]==0){
+				output[0]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET);									//enable
+		}
+		else{
+				output[0]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET);								//disable
+		}
  }
  else if(GPIO_Pin == GPIO_PIN_1){
 		input[1]=HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_1);
+	 		if(input[1]==1){
+				output[1]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_RESET);									//enable
+		}
+		else{
+				output[1]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_SET);								//disable
+		}
  }
  else if(GPIO_Pin == GPIO_PIN_2){
 		input[2]=HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_2);
+		if(input[2]==1){
+				output[2]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);									//enable
+		}
+		else{
+				output[2]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);								//disable
+		}
  }
  else if(GPIO_Pin == GPIO_PIN_3){
 		input[3]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_3);
+		if(input[3]==1){
+				output[3]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);									//enable
+		}
+		else{
+				output[3]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);								//disable
+		}
  }
  else if(GPIO_Pin == GPIO_PIN_4){
-		input[4]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_4);
+		if(output[0]==1){
+				output[0]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET);									//enable
+		}
+		else{
+				output[0]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET);								//disable
+		}
  }
   else if(GPIO_Pin == GPIO_PIN_7){
-		input[5]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_7);
+		if(output[1]==1){
+				output[1]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_RESET);									//enable
+		}
+		else{
+				output[1]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_SET);								//disable
+		}
  }
  else if(GPIO_Pin == GPIO_PIN_10){
-		input[6]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_10);
+		if(output[2]==1){
+				output[2]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);									//enable
+		}
+		else{
+				output[2]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_SET);								//disable
+		}
  }
  else if(GPIO_Pin == GPIO_PIN_11){
-		input[7]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_11);
+		if(output[3]==1){
+				output[3]=0;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);									//enable
+		}
+		else{
+				output[3]=1;
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_SET);								//disable
+		}
  }
  else if(GPIO_Pin == GPIO_PIN_12){
 		input[8]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_12);

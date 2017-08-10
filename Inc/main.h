@@ -46,16 +46,26 @@
 
 /* Private define ------------------------------------------------------------*/
 
-#define IN1_Pin GPIO_PIN_14
-#define IN1_GPIO_Port GPIOC
-#define IN2_Pin GPIO_PIN_15
-#define IN2_GPIO_Port GPIOC
-#define IN3_Pin GPIO_PIN_0
-#define IN3_GPIO_Port GPIOH
-#define IN4_Pin GPIO_PIN_1
-#define IN4_GPIO_Port GPIOH
+#define IN13_Pin GPIO_PIN_13
+#define IN13_GPIO_Port GPIOC
+#define IN13_EXTI_IRQn EXTI15_10_IRQn
+#define IN14_Pin GPIO_PIN_14
+#define IN14_GPIO_Port GPIOC
+#define IN14_EXTI_IRQn EXTI15_10_IRQn
+#define IN15_Pin GPIO_PIN_15
+#define IN15_GPIO_Port GPIOC
+#define IN15_EXTI_IRQn EXTI15_10_IRQn
+#define IN1_Pin GPIO_PIN_1
+#define IN1_GPIO_Port GPIOH
+#define IN1_EXTI_IRQn EXTI1_IRQn
 #define SPI_CS_Pin GPIO_PIN_1
 #define SPI_CS_GPIO_Port GPIOC
+#define IN0_Pin GPIO_PIN_0
+#define IN0_GPIO_Port GPIOA
+#define IN0_EXTI_IRQn EXTI0_IRQn
+#define IN4_Pin GPIO_PIN_4
+#define IN4_GPIO_Port GPIOA
+#define IN4_EXTI_IRQn EXTI4_IRQn
 #define OUT1_Pin GPIO_PIN_1
 #define OUT1_GPIO_Port GPIOB
 #define OUT2_Pin GPIO_PIN_13
@@ -68,8 +78,24 @@
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
-#define SWO_Pin GPIO_PIN_3
-#define SWO_GPIO_Port GPIOB
+#define IN10_Pin GPIO_PIN_10
+#define IN10_GPIO_Port GPIOC
+#define IN10_EXTI_IRQn EXTI15_10_IRQn
+#define IN11_Pin GPIO_PIN_11
+#define IN11_GPIO_Port GPIOC
+#define IN11_EXTI_IRQn EXTI15_10_IRQn
+#define IN12_Pin GPIO_PIN_12
+#define IN12_GPIO_Port GPIOC
+#define IN12_EXTI_IRQn EXTI15_10_IRQn
+#define IN2_Pin GPIO_PIN_2
+#define IN2_GPIO_Port GPIOD
+#define IN2_EXTI_IRQn EXTI2_IRQn
+#define IN3_Pin GPIO_PIN_3
+#define IN3_GPIO_Port GPIOB
+#define IN3_EXTI_IRQn EXTI3_IRQn
+#define IN7_Pin GPIO_PIN_7
+#define IN7_GPIO_Port GPIOB
+#define IN7_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 

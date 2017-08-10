@@ -53,6 +53,7 @@ RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi2;
 
+UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
@@ -88,6 +89,7 @@ uint8_t day=0;
 uint8_t ntp_buf[512];
 
 uint8_t output[4];
+uint8_t input[12];
 
 /* USER CODE END PV */
 
@@ -97,6 +99,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_RTC_Init(void);
+static void MX_USART2_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -105,6 +108,7 @@ void cs_sel(void);
 void cs_desel(void);
 uint8_t spi_rb(void);
 void spi_wb(uint8_t b);
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin);
 
 /* USER CODE END PFP */
 
@@ -140,6 +144,7 @@ int main(void)
   MX_USART6_UART_Init();
   MX_SPI2_Init();
   MX_RTC_Init();
+  MX_USART2_UART_Init();
 
   /* USER CODE BEGIN 2 */
 	
@@ -336,6 +341,7 @@ int main(void)
 															"Czas: %02d:%02d:%02d\r\n"
 															"<br>\r\n"
 															"<a href=""config"">Powrót</a>\r\n"
+															"</BODY>\r\n"
 															"</HTML>",
 															day,month,year,
 															hour,minute,second);
@@ -344,6 +350,7 @@ int main(void)
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
 															"Content-Type: text/html\r\n"
 															"Connection: close\r\n"
+															"Refresh: 1\r\n"
 															"\r\n"
 															"<!DOCTYPE HTML>\r\n"
 															"<HTML>\r\n"
@@ -351,7 +358,35 @@ int main(void)
 															"<TITLE>Wejscia</TITLE>\r\n"
 															"</HEAD>\r\n"
 															"<BODY>\r\n"
-															"</HTML>");
+															"Wejscie1: %d\r\n"
+															"<br>\r\n"
+															"Wejscie2: %d\r\n"
+															"<br>\r\n"
+															"Wejscie3: %d\r\n"
+															"<br>\r\n"
+															"Wejscie4: %d\r\n"
+															"<br>\r\n"
+															"Wejscie5: %d\r\n"
+															"<br>\r\n"
+															"Wejscie6: %d\r\n"
+															"<br>\r\n"
+															"Wejscie7: %d\r\n"
+															"<br>\r\n"
+															"Wejscie8: %d\r\n"
+															"<br>\r\n"
+															"Wejscie9: %d\r\n"
+															"<br>\r\n"
+															"Wejscie10: %d\r\n"
+															"<br>\r\n"
+															"Wejscie11: %d\r\n"
+															"<br>\r\n"
+															"Wejscie12: %d\r\n"
+															"<br>\r\n"
+															"</BODY>\r\n"
+															"</HTML>",
+															input[0],input[1],input[2],input[3],
+															input[4],input[5],input[6],input[7],
+															input[8],input[9],input[10],input[11]);
 					}
 					else if(strstr(http_request,"wyjscia") != NULL){
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
@@ -372,6 +407,7 @@ int main(void)
 															"Wyjscie3: %d <a href=""OUT3=0"">Wlacz</a> <a href=""OUT3=1"">Wylacz</a>\r\n"
 															"<br>\r\n"
 															"Wyjscie4: %d <a href=""OUT4=0"">Wlacz</a> <a href=""OUT4=1"">Wylacz</a>\r\n"
+															"</BODY>\r\n"
 															"</HTML>",
 															output[0],output[1],output[2],output[3]);
 					}
@@ -612,6 +648,25 @@ static void MX_SPI2_Init(void)
 
 }
 
+/* USART2 init function */
+static void MX_USART2_UART_Init(void)
+{
+
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_RTS;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
 /* USART6 init function */
 static void MX_USART6_UART_Init(void)
 {
@@ -646,8 +701,9 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_RESET);
@@ -655,17 +711,19 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, OUT1_Pin|OUT2_Pin|OUT3_Pin|OUT4_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : IN1_Pin IN2_Pin */
-  GPIO_InitStruct.Pin = IN1_Pin|IN2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  /*Configure GPIO pins : IN13_Pin IN14_Pin IN15_Pin IN10_Pin 
+                           IN11_Pin IN12_Pin */
+  GPIO_InitStruct.Pin = IN13_Pin|IN14_Pin|IN15_Pin|IN10_Pin 
+                          |IN11_Pin|IN12_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : IN3_Pin IN4_Pin */
-  GPIO_InitStruct.Pin = IN3_Pin|IN4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
+  /*Configure GPIO pin : IN1_Pin */
+  GPIO_InitStruct.Pin = IN1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(IN1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SPI_CS_Pin */
   GPIO_InitStruct.Pin = SPI_CS_Pin;
@@ -674,12 +732,52 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(SPI_CS_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : IN0_Pin IN4_Pin */
+  GPIO_InitStruct.Pin = IN0_Pin|IN4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : OUT1_Pin OUT2_Pin OUT3_Pin OUT4_Pin */
   GPIO_InitStruct.Pin = OUT1_Pin|OUT2_Pin|OUT3_Pin|OUT4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : IN2_Pin */
+  GPIO_InitStruct.Pin = IN2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(IN2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : IN3_Pin IN7_Pin */
+  GPIO_InitStruct.Pin = IN3_Pin|IN7_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI3_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
@@ -705,6 +803,45 @@ void spi_wb(uint8_t b) {
 
 void PRINT_STR(char *msg){
 		HAL_UART_Transmit(&huart6, (uint8_t*)msg, strlen(msg), 100);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+ if(GPIO_Pin == GPIO_PIN_0){
+		input[0]=HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_0);
+ }
+ else if(GPIO_Pin == GPIO_PIN_1){
+		input[1]=HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_1);
+ }
+ else if(GPIO_Pin == GPIO_PIN_2){
+		input[2]=HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_2);
+ }
+ else if(GPIO_Pin == GPIO_PIN_3){
+		input[3]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_3);
+ }
+ else if(GPIO_Pin == GPIO_PIN_4){
+		input[4]=HAL_GPIO_ReadPin(GPIOA,GPIO_PIN_4);
+ }
+  else if(GPIO_Pin == GPIO_PIN_7){
+		input[5]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_7);
+ }
+ else if(GPIO_Pin == GPIO_PIN_10){
+		input[6]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_10);
+ }
+ else if(GPIO_Pin == GPIO_PIN_11){
+		input[7]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_11);
+ }
+ else if(GPIO_Pin == GPIO_PIN_12){
+		input[8]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_12);
+ }
+ else if(GPIO_Pin == GPIO_PIN_13){
+		input[9]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_13);
+ }
+ else if(GPIO_Pin == GPIO_PIN_14){
+		input[10]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_14);
+ }
+ else if(GPIO_Pin == GPIO_PIN_15){
+		input[11]=HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_15);
+ }
 }
 
 /* USER CODE END 4 */

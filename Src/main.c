@@ -209,7 +209,7 @@ int main(void)
 		if((retVal = listen(0)) == SOCK_OK) {
 			/* While socket is in LISTEN mode we wait for a remote connection */
 			while(sockStatus = getSn_SR(0) == SOCK_LISTEN)
-				HAL_Delay(100);
+				HAL_Delay(250);
 			/* OK. Got a remote peer. Let's send a message to it */
 			while(1) {
 				/* If connection is ESTABLISHED with remote peer */
@@ -223,10 +223,17 @@ int main(void)
 					getsockopt(0, SO_DESTPORT, (uint8_t*)&remotePort);
 					sprintf(msg, CONN_ESTABLISHED_MSG, remoteIP[0], remoteIP[1], remoteIP[2], remoteIP[3], remotePort);
 					HAL_UART_Transmit(&huart6, (uint8_t*)msg, strlen(msg), 100);
-					
+#endif					
 					http_request_len = recv(0,(uint8_t *)http_request,2048);
+#ifdef http_debug
 					HAL_UART_Transmit(&huart6, (uint8_t*)http_request, http_request_len, 100);
 #endif
+					while(strstr(http_request,"\r\n\r\n") == NULL){
+						http_request_len = recv(0,(uint8_t *)http_request,2048);
+#ifdef http_debug
+						HAL_UART_Transmit(&huart6, (uint8_t*)http_request, http_request_len, 100);
+#endif
+					}
 					if(strstr(http_request,"GET / HTTP/1.1\r\n") != NULL){
 						sprintf(http_data,"HTTP/1.1 200 OK\r\n"
 															"Content-Type: text/html\r\n"
@@ -821,7 +828,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		input[1]=HAL_GPIO_ReadPin(GPIOH,GPIO_PIN_1);
 	 		if(input[1]==1){
 				output[1]=0;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_RESET);									//enable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_RESET);							//enable
 		}
 		else{
 				output[1]=1;
@@ -832,7 +839,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		input[2]=HAL_GPIO_ReadPin(GPIOD,GPIO_PIN_2);
 		if(input[2]==1){
 				output[2]=0;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);									//enable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);							//enable
 		}
 		else{
 				output[2]=1;
@@ -843,7 +850,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
 		input[3]=HAL_GPIO_ReadPin(GPIOB,GPIO_PIN_3);
 		if(input[3]==1){
 				output[3]=0;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);									//enable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);							//enable
 		}
 		else{
 				output[3]=1;
@@ -853,17 +860,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
  else if(GPIO_Pin == GPIO_PIN_4){
 		if(output[0]==1){
 				output[0]=0;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET);									//enable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_RESET);								//enable
 		}
 		else{
 				output[0]=1;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET);								//disable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_1,GPIO_PIN_SET);									//disable
 		}
  }
   else if(GPIO_Pin == GPIO_PIN_7){
 		if(output[1]==1){
 				output[1]=0;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_RESET);									//enable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_15,GPIO_PIN_RESET);							//enable
 		}
 		else{
 				output[1]=1;
@@ -873,7 +880,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
  else if(GPIO_Pin == GPIO_PIN_10){
 		if(output[2]==1){
 				output[2]=0;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);									//enable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_14,GPIO_PIN_RESET);							//enable
 		}
 		else{
 				output[2]=1;
@@ -883,7 +890,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
  else if(GPIO_Pin == GPIO_PIN_11){
 		if(output[3]==1){
 				output[3]=0;
-				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);									//enable
+				HAL_GPIO_WritePin(GPIOB,GPIO_PIN_13,GPIO_PIN_RESET);							//enable
 		}
 		else{
 				output[3]=1;

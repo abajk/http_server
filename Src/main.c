@@ -322,6 +322,16 @@ int main(void)
 						RTC_Date.Month=time.mo;
 						RTC_Date.Date=time.dd;
 						HAL_RTC_SetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
+
+						HAL_RTC_GetTime(&hrtc,&RTC_Time,RTC_FORMAT_BIN);
+						HAL_RTC_GetDate(&hrtc,&RTC_Date,RTC_FORMAT_BIN);
+						hour=RTC_Time.Hours;
+						minute=RTC_Time.Minutes;
+						second=RTC_Time.Seconds;
+		
+						year=RTC_Date.Year+2000;
+						month=RTC_Date.Month;
+						day=RTC_Date.Date;						
 						
 						if( (RTC_Date.Month > 2 && RTC_Date.Month < 9)	// miesiace od kwietnia do wrzesnia wlacznie
 										|| (RTC_Date.Month == 2 && RTC_Date.Month > ( 31 - ( ( 31 - RTC_Date.Date + RTC_Date.WeekDay % 7 ) % 7 ) ) )	// dni marca po ostaniej niedzieli
